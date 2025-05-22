@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapas de Empatía - Perfiles de Usuario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .profiles-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .profile-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .profile-btn:hover, .profile-btn.active {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .empathy-map {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .empathy-map.active {
+            display: block;
+        }
+
+        .map-title {
+            text-align: center;
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: 1fr 200px 1fr;
+            grid-template-rows: 1fr 200px 1fr;
+            gap: 20px;
+            height: 600px;
+        }
+
+        .map-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border: 3px solid;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .thinks-feels {
+            border-color: #e74c3c;
+            background: linear-gradient(135deg, #fee, #fdd);
+        }
+
+        .hears {
+            border-color: #f39c12;
+            background: linear-gradient(135deg, #fff8e1, #ffecb3);
+        }
+
+        .sees {
+            border-color: #2ecc71;
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+        }
+
+        .says-does {
+            border-color: #3498db;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        }
+
+        .user-center {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .user-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .frustrations {
+            border-color: #8e44ad;
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+        }
+
+        .needs {
+            border-color: #1abc9c;
+            background: linear-gradient(135deg, #e0f2f1, #b2dfdb);
+        }
+
+        .section-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-content {
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .section-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .section-content li {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .thinks-feels li { border-left-color: #e74c3c; }
+        .hears li { border-left-color: #f39c12; }
+        .sees li { border-left-color: #2ecc71; }
+        .says-does li { border-left-color: #3498db; }
+        .frustrations li { border-left-color: #8e44ad; }
+        .needs li { border-left-color: #1abc9c; }
+
+        .demographics {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .demographics h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .map-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                height: auto;
+            }
+            
+            .user-center {
+                border-radius: 15px;
+                padding: 30px;
+            }
+            
+            .profiles-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Mapas de Empatía</h1>
+            <p>Perfiles de Usuario - Aplicaciones Financieras Digitales</p>
+        </div>
+
+        <div class="profiles-selector">
+            <button class="profile-btn active" onclick="showProfile('jovenes')">👦 Jóvenes (20-23 años)</button>
+            <button class="profile-btn" onclick="showProfile('adultos')">👨 Adultos Jóvenes (30-33 años)</button>
+            <button class="profile-btn" onclick="showProfile('universitarios')">🎓 Formación Universitaria</button>
+            <button class="profile-btn" onclick="showProfile('tecnicos')">💻 Formación Técnica</button>
+        </div>
+
+        <!-- Usuarios Jóvenes -->
+        <div class="empathy-map active" id="jovenes">
+            <div class="demographics">
+                <h3>Usuarios Jóvenes (20-23 años)</h3>
+                <p><strong>70% de la muestra</strong> - Nativos digitales con alta adopción tecnológica</p>
+            </div>
+            
+            <div class="map-title">Mapa de Empatía - Usuarios Jóvenes</div>
+            
+            <div class="map-grid">
+                <div class="map-section thinks-feels">
+                    <div class="section-title">🤔 Piensa y Siente</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>"Necesito que las aplicaciones sean rápidas y confiables"</li>
+                            <li>"Valoro la seguridad pero no quiero que sea complicada"</li>
+                            <li>"Espero que funcione sin fallas técnicas"</li>
+                            <li>"Me gusta tener control total de mis transacciones"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section hears">
+                    <div class="section-title">👂 Escucha</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Experiencias de amigos sobre facilidad de uso</li>
+                            <li>Recomendaciones sobre aplicaciones más seguras</li>
+                            <li>Comentarios sobre problemas técnicos ocasionales</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section sees">
+                    <div class="section-title">👀 Ve</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Uso generalizado de aplicaciones como Nequi entre su grupo etario</li>
+                            <li>Comercios que aceptan pagos digitales</li>
+                            <li>Promociones y beneficios de las aplicaciones financieras</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="user-center">
+                    <div class="user-icon">👤</div>
+                    <h3>Usuario Joven</h3>
+                    <p>20-23 años</p>
+                    <p>70% muestra</p>
+                </div>
+
+                <div class="map-section says-does">
+                    <div class="section-title">💬 Dice y Hace</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>"Nequi es muy confiable y fácil de usar"</li>
+                            <li>Realiza transacciones múltiples veces al día</li>
+                            <li>Recomienda aplicaciones a otros</li>
+                            <li>Usa principalmente para enviar dinero y recibir pagos</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section frustrations">
+                    <div class="section-title">😤 Frustraciones</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Caídas ocasionales del sistema</li>
+                            <li>Preocupación por posibles fraudes</li>
+                            <li>Limitaciones para usar en todos los establecimientos</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section needs">
+                    <div class="section-title">✨ Necesidades</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Estabilidad del sistema (que no se caiga)</li>
+                            <li>Seguridad garantizada visible</li>
+                            <li>Cobertura universal de pagos</li>
+                            <li>Rapidez en las transacciones</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuarios Adultos Jóvenes -->
+        <div class="empathy-map" id="adultos">
+            <div class="demographics">
+                <h3>Usuarios Adultos Jóvenes (30-33 años)</h3>
+                <p><strong>30% de la muestra</strong> - Adoptantes cautelosos con experiencia</p>
+            </div>
+            
+            <div class="map-title">Mapa de Empatía - Adultos Jóvenes</div>
+            
+            <div class="map-grid">
+                <div class="map-section thinks-feels">
+                    <div class="section-title">🤔 Piensa y Siente</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>"Las aplicaciones son útiles pero debo ser cauteloso"</li>
+                            <li>"Aprecio la conveniencia pero mantengo cierta reserva"</li>
+                            <li>"La tecnología es helpful pero tiene riesgos"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section hears">
+                    <div class="section-title">👂 Escucha</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Noticias sobre fraudes digitales</li>
+                            <li>Experiencias mixtas de otros usuarios</li>
+                            <li>Recomendaciones de seguridad</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section sees">
+                    <div class="section-title">👀 Ve</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Adopción creciente en su entorno</li>
+                            <li>Beneficios prácticos evidentes</li>
+                            <li>Riesgos potenciales de seguridad</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="user-center">
+                    <div class="user-icon">👨</div>
+                    <h3>Adulto Joven</h3>
+                    <p>30-33 años</p>
+                    <p>30% muestra</p>
+                </div>
+
+                <div class="map-section says-does">
+                    <div class="section-title">💬 Dice y Hace</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>"Confío pero con precaución"</li>
+                            <li>Usa aplicaciones con frecuencia moderada</li>
+                            <li>Prefiere transacciones conocidas y seguras</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section frustrations">
+                    <div class="section-title">😤 Frustraciones</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Inseguridad ocasional sobre la protección de datos</li>
+                            <li>Dependencia de la tecnología para transacciones importantes</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section needs">
+                    <div class="section-title">✨ Necesidades</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Transparencia en medidas de seguridad</li>
+                            <li>Confiabilidad constante</li>
+                            <li>Respaldo ante problemas técnicos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuarios Universitarios -->
+        <div class="empathy-map" id="universitarios">
+            <div class="demographics">
+                <h3>Usuarios con Formación Universitaria</h3>
+                <p><strong>70% de la muestra</strong> - Alta capacidad de análisis y evaluación</p>
+            </div>
+            
+            <div class="map-title">Mapa de Empatía - Formación Universitaria</div>
+            
+            <div class="map-grid">
+                <div class="map-section thinks-feels">
+                    <div class="section-title">🤔 Piensa y Siente</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>"Entiendo los beneficios y riesgos de estas tecnologías"</li>
+                            <li>"Puedo evaluar la seguridad y funcionalidad"</li>
+                            <li>"Espero que la aplicación sea intuitiva y eficiente"</li>
+                            <li>"Valoro la versatilidad y múltiples funciones"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section hears">
+                    <div class="section-title">👂 Escucha</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Análisis técnicos sobre seguridad digital</li>
+                            <li>Comparaciones entre diferentes aplicaciones</li>
+                            <li>Actualizaciones sobre nuevas funcionalidades</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section sees">
+                    <div class="section-title">👀 Ve</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Adopción masiva entre pares educados</li>
+                            <li>Evolución constante de las plataformas</li>
+                            <li>Integración con servicios diversos</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="user-center">
+                    <div class="user-icon">🎓</div>
+                    <h3>Universitario</h3>
+                    <p>Formación Superior</p>
+                    <p>70% muestra</p>
+                </div>
+
+                <div class="map-section says-does">
+                    <div class="section-title">💬 Dice y Hace</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>"Las aplicaciones son muy intuitivas y versátiles"</li>
+                            <li>Usa múltiples funciones de manera eficiente</li>
+                            <li>Evalúa críticamente el rendimiento</li>
+                            <li>Adopta rápidamente nuevas características</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section frustrations">
+                    <div class="section-title">😤 Frustraciones</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Caídas ocasionales del sistema</li>
+                            <li>Limitaciones en cobertura de establecimientos</li>
+                            <li>Preocupaciones sobre fraudes sofisticados</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section needs">
+                    <div class="section-title">✨ Necesidades</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Estabilidad y confiabilidad del sistema</li>
+                            <li>Expansión de la red de aceptación</li>
+                            <li>Medidas de seguridad robustas y transparentes</li>
+                            <li>Funcionalidades avanzadas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuarios Técnicos -->
+        <div class="empathy-map" id="tecnicos">
+            <div class="demographics">
+                <h3>Usuarios con Formación Técnica/Tecnológica</h3>
+                <p><strong>30% de la muestra</strong> - Expertos técnicos con uso intensivo</p>
+            </div>
+            
+            <div class="map-title">Mapa de Empatía - Formación Técnica</div>
+            
+            <div class="map-grid">
+                <div class="map-section thinks-feels">
+                    <div class="section-title">🤔 Piensa y Siente</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>"Tengo conocimiento técnico para usar estas herramientas eficientemente"</li>
+                            <li>"Aprecio el diseño técnico y la funcionalidad"</li>
+                            <li>"Confío en mi capacidad para usar la tecnología de manera segura"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section hears">
+                    <div class="section-title">👂 Escucha</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Detalles técnicos sobre actualizaciones</li>
+                            <li>Mejores prácticas de seguridad digital</li>
+                            <li>Innovaciones en tecnología financiera</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section sees">
+                    <div class="section-title">👀 Ve</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Oportunidades de mejora técnica</li>
+                            <li>Comparación con estándares internacionales</li>
+                            <li>Potencial de integración tecnológica</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="user-center">
+                    <div class="user-icon">💻</div>
+                    <h3>Técnico</h3>
+                    <p>Formación Técnica</p>
+                    <p>30% muestra</p>
+                </div>
+
+                <div class="map-section says-does">
+                    <div class="section-title">💬 Dice y Hace</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>"El diseño está muy bien adaptado a mis necesidades"</li>
+                            <li>Utiliza la aplicación de manera intensiva</li>
+                            <li>Propone mejoras basadas en experiencia técnica</li>
+                            <li>Adopta funciones avanzadas rápidamente</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section frustrations">
+                    <div class="section-title">😤 Frustraciones</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Limitaciones técnicas ocasionales</li>
+                            <li>Falta de funciones más especializadas</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="map-section needs">
+                    <div class="section-title">✨ Necesidades</div>
+                    <div class="section-content">
+                        <ul>
+                            <li>Mayor robustez técnica</li>
+                            <li>Funciones avanzadas adicionales</li>
+                            <li>Personalización de la experiencia</li>
+                            <li>Integración con otras plataformas tecnológicas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showProfile(profileId) {
+            // Ocultar todos los mapas
+            const maps = document.querySelectorAll('.empathy-map');
+            maps.forEach(map => map.classList.remove('active'));
+            
+            // Mostrar el mapa seleccionado
+            document.getElementById(profileId).classList.add('active');
+            
+            // Actualizar botones
+            const buttons = document.querySelectorAll('.profile-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
